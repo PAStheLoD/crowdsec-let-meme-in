@@ -1,11 +1,11 @@
-#!/usr/bin/env -S deno run --allow-net --allow-write --allow-read server.ts
+#!/usr/bin/env -S deno run --allow-net --allow-write --allow-read 
 
 
 
 ///# https://github.com/dyedgreen/deno-sqlite/issues/255
 
 import { DB } from "https://deno.land/x/sqlite@v3.8/mod.ts";
-
+import { stringify } from "https://deno.land/std@0.207.0/yaml/mod.ts";
 
 const port = 7891;
 
@@ -22,14 +22,14 @@ db.execute(`
 
 
 
-const handler = (request: Request): Response => {
-  const body = `Your user-agent is:\n\n${
-    request.headers.get("user-agent") ?? "Unknown"
-  }`;
-
-  return new Response(body, { status: 200 });
-};
-
+const csParserYamlTemplate = {
+    name: 'allowed IPs',
+    description: 'whitelist events from my IP addresses',
+    whitelist: {
+        reason: 'my IPs added via dynamic magic',
+        ip: []
+    }
+}
 
 if (Deno.args.length > 1) {
     if (Deno.args[1] == '--add-client') {
@@ -58,12 +58,29 @@ if (Deno.args.length > 1) {
     Deno.exit(0)
 }
 
+
+
+const generate = async () => {
+
+    const ips = [...new Set( db.query<[string]>("SELECT client_ip FROM allowlist").flat() )]
+
+
+    await Deno.writeTextFile("ip-allowlist.txt", ips.join("\n"));
+
+    const yaml = csParserYamlTemplate
+    yaml.whitelist.ip = ips
+
+    await Deno.writeTextFile('allowed-ip-list.yaml', stringify(yaml))
+
+    console.log(`done, list has ${ips.length} addresses`)
+}
+
 console.log(`HTTP server running. Access it at: http://localhost:${port}/`);
 Deno.serve({ port }, async (req: Request, info: ServeHandlerInfo) => {
     if (! req.body) { return new Response('missing body', { status: 400 }) }
 
     const b = await req.formData()
-    console.log(b, b.get('password'), info, info.remoteAddr, req.headers.get('x-real-ip'))
+    // console.log(b, b.get('password'), info, info.remoteAddr, req.headers.get('x-real-ip'))
 
     const pw = b.get('password')
 
@@ -78,6 +95,11 @@ Deno.serve({ port }, async (req: Request, info: ServeHandlerInfo) => {
         return new Response(`you won't believe what just happened with your request after we run password validation`, { status: 403 })
     }
 
+    if (b.get('action') == 'generate') {
+        await generate()
+        return new Response('generated')
+    }
+
     const clientIp = req.headers.get('x-real-ip')
 
     if (! clientIp) { return new Response('missing x-real-ip header', { status: 400 }) }
@@ -89,15 +111,11 @@ Deno.serve({ port }, async (req: Request, info: ServeHandlerInfo) => {
         const msg = `updated, last ip was: ${lastIp}, new is ${clientIp}`
         console.log((new Date()).toISOString(), `client: ${pw.substr(0, 3)}...${pw.substr(-3)}       ${msg} ... generating IP allowlist`)
 
-
-        const ips = db.query<[string]>("SELECT client_ip FROM allowlist");
-        await Deno.writeTextFile("ip-allowlist.txt", ips.join("\n"));
-
-        console.log(`done, list has ${ips.length} addresses`)
+        await generate()
 
         return new Response(msg, { status: 201 })
     } else {
-        return new Response(`no update needed, ip ${clientIp}`, { status: 200 })
+        return new Response(`no update needed, ip ${clientIp}`)
     }
 
 

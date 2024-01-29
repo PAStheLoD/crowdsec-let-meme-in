@@ -20,11 +20,18 @@
  
  3. crowdsec parser discards events with the listed IPs
     
-    https://docs.crowdsec.net/docs/expr/helpers#filefilename-string provides a cache too
+    unfortunately the File helper is as dynamic as my lazy ass on a Sunday after a week of cursing at documentation :/
 
-    ```
-    evt.Parsed.some_field in File('ip-allowlist.txt')
-    ```
+    https://github.com/crowdsecurity/crowdsec-docs/blob/aa982ea4a9a92ea7d30933fc20158628e774f7e3/crowdsec-docs/docs/expr/file_helpers.md#L8
+
+    so instead of something elegant like this `evt.Parsed.some_field in File('/opt/ip-allowlist.txt')`
+    we need to periodically run a script
+
+    which checks if the emitted YAML is newer than then /etc/crowdsec/parsers/s02-enrich/allowed-ips-from-file.yaml
+
+    if the YAML is fresh and crispy, moves it over, then reloads crowdsec via systemctl
+
+
  4. dear user sets up something like this on startup
 
     # windows

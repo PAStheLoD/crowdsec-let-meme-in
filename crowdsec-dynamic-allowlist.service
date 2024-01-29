@@ -1,0 +1,12 @@
+[Unit]
+Description=A small Deno based HTTP server, like a dynamic DNS updater but for CrowdSec
+After=crowdsec.service
+
+[Service]
+ExecStart=/usr/bin/env deno run --allow-net --allow-write --allow-read server.ts
+Restart=always
+RestartSec=10
+WorkingDirectory=/opt/security-dynamic-allowlist
+
+[Install]
+WantedBy=multi-user.target
