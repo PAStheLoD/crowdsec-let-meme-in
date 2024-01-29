@@ -1,4 +1,5 @@
 
+![Eric Andre screaming "Let me in!", behind the fence the crowdsec lama gang](let-meme-in.jpg)
 
  1. this little server runs via systemd (or docker), preferably behind an Nginx reverse proxy (which handles TLS), waiting for clients to send requests.
 
