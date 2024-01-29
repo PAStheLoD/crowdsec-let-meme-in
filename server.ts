@@ -87,7 +87,13 @@ Deno.serve({ port }, async (req: Request, info: ServeHandlerInfo) => {
     if (lastIp !== clientIp) {
         db.query('UPDATE allowlist SET client_ip = ? WHERE password = ?', [ clientIp ,pw ])
         const msg = `updated, last ip was: ${lastIp}, new is ${clientIp}`
-        console.log((new Date()).toISOString(), `client: ${pw.substr(0, 3)}...${pw.substr(-3)}       ${msg}`)
+        console.log((new Date()).toISOString(), `client: ${pw.substr(0, 3)}...${pw.substr(-3)}       ${msg} ... generating IP allowlist`)
+
+
+        const ips = db.query<[string]>("SELECT client_ip FROM allowlist");
+        await Deno.writeTextFile("ip-allowlist.txt", ips.join("\n"));
+
+        console.log(`done, list has ${ips.length} addresses`)
 
         return new Response(msg, { status: 201 })
     } else {
