@@ -1,0 +1,2 @@
+
+*/10  * * * * chdir /opt/security-dynamic-allowlist  && ./reload-cs.ts
