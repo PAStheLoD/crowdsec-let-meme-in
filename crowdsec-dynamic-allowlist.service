@@ -6,7 +6,7 @@ After=crowdsec.service
 ExecStart=/usr/bin/env deno run --allow-net --allow-write --allow-read server.ts
 Restart=always
 RestartSec=10
-WorkingDirectory=/opt/security-dynamic-allowlist
+WorkingDirectory=/opt/crowdsec-let-meme-in
 
 [Install]
 WantedBy=multi-user.target
