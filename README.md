@@ -3,7 +3,7 @@
 
 # setup story
 
- 0. .
+ 0. code and context
 
     ```
     cd /opt
@@ -31,7 +31,7 @@
 
 
 
- 1. this little server runs via systemd (or docker), preferably behind an Nginx reverse proxy (which handles TLS), waiting for clients to send requests.
+ 1. this little server runs via systemd (or docker, but no Dockerfile, huh), preferably behind an Nginx reverse proxy (which handles TLS), waiting for clients to send requests.
 
     ```
     # somewhere in /etc/nginx/conf.d/your.site.conf
@@ -66,7 +66,7 @@
     so instead of something elegant like this `evt.Parsed.some_field in File('/opt/ip-allowlist.txt')`
     we need to periodically run a script
 
-    which checks if the emitted YAML is newer than then /etc/crowdsec/parsers/s02-enrich/allowed-ips-from-file.yaml
+    which checks if the emitted YAML is newer than /etc/crowdsec/parsers/s02-enrich/allowed-ips-from-file.yaml
 
     if the YAML is fresh and crispy, moves it over, then reloads crowdsec via systemctl
 
@@ -81,24 +81,30 @@
 
  4. dear user sets up something like this on startup
 
-    # windows
+    TODO: probably it needs to be periodic, users can roam
+    up and down the endless wireless rainbow, or even be
+    offline when startup scripts run :o (so at least a retry loop is needed)
 
-    put a .cmd file in "$Env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
+    * windows
 
-    ```
-
-    rem PowerShell -Command "Set-ExecutionPolicy Unrestricted"
-    PowerShell %USERPROFILE%\Documents\PowerShell\ip-dynamic-bump.ps1 >> "%TEMP%\StartupLog.txt" 2>&1
-
-    ```
-
-    and have a nice PS script, like this
-
-
-    ```
-    $postParams = @{username='not me';password='abc-def-676097154-zyz'}
-
-    Invoke-WebRequest -Uri https://where.you.deploy.ed/security/allowlist -Method POST -Body $postParams
-
-    ```
-
+       put a .cmd file in "$Env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup"
+    
+        ```
+    
+        rem PowerShell -Command "Set-ExecutionPolicy Unrestricted"
+        PowerShell %USERPROFILE%\Documents\PowerShell\ip-dynamic-bump.ps1 >> "%TEMP%\StartupLog.txt" 2>&1
+    
+        ```
+    
+        and have a nice PS script, like this
+    
+    
+        ```
+        $postParams = @{username='not me';password='abc-def-676097154-zyz'}
+    
+        Invoke-WebRequest -Uri https://where.you.deploy.ed/security/allowlist -Method POST -Body $postParams
+    
+        ```
+    
+    
+    
