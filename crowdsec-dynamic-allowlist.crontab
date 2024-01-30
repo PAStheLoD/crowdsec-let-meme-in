@@ -1,2 +1,4 @@
 
-*/10  * * * * chdir /opt/crowdsec-let-meme-in  && ./reload-cs.ts
+*/10  * * * * root    chdir /opt/crowdsec-let-meme-in  && ./reload-cs.ts 2>&1  | logger -t crowdsec-allowlist-updater
+
+
