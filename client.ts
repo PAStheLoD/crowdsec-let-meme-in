@@ -9,7 +9,7 @@ Deno.writeFileSync('./test1111',  encoder.encode("XXXXXXXxx 1 "))
 
 import { load } from "@std/dotenv";
 
-import SysTray from "https://deno.land/x/systray/mod.ts";
+import SysTray from "https://deno.land/x/systray@v0.3.0/mod.ts";
 
 // try to load .env files
 const env = await load();
