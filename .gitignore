@@ -4,3 +4,5 @@ ip-allowlist.txt
 allowed-ip-list.yaml
 
 .env
+client.exe
+bin/
