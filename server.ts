@@ -26,73 +26,83 @@ const csParserYamlTemplate = {
     },
 };
 
-
-
 const server = () => {
     console.log(`HTTP server running. Access it at: http://localhost:${port}/`);
 
-    Deno.serve({ port }, async (req: Request, _info: unknown /* ServeHandlerInfo */) => {
-        if (!req.body) return new Response("missing body", { status: 400 });
+    Deno.serve(
+        { port },
+        async (req: Request, _info: unknown /* ServeHandlerInfo */) => {
+            if (!req.body) return new Response("missing body", { status: 400 });
 
-        const b = await req.formData();
-        // console.log(b, b.get('password'), info, info.remoteAddr, req.headers.get('x-real-ip'))
+            const b = await req.formData();
+            // console.log(b, b.get('password'), info, info.remoteAddr, req.headers.get('x-real-ip'))
 
-        const pw = b.get("password") as string;
+            const pw = b.get("password") as string;
 
-        if (typeof pw !== 'string') {
-            throw new Error(`runtime error: got something non-string in form data - ${typeof pw} //// ${JSON.stringify(pw)}`)
-        }
+            if (typeof pw !== "string") {
+                throw new Error(
+                    `runtime error: got something non-string in form data - ${typeof pw} //// ${
+                        JSON.stringify(pw)
+                    }`,
+                );
+            }
 
-        if (!pw) return new Response("missing pw", { status: 400 });
+            if (!pw) return new Response("missing pw", { status: 400 });
 
-        const lastIps = db.query<[string, string]>(
-            "SELECT password, client_ip FROM allowlist WHERE password = ?",
-            [pw],
-        );
-
-        if (lastIps.length === 0) {
-            // cool, cool, cool, seems someone mistyped the password, or wants to HACKFUCK our little CYBERHEART to KILLDEATH, how'bout no
-            return new Response(
-                `you won't believe what just happened with your request after we run password validation`,
-                { status: 403 },
-            );
-        }
-
-        if (b.get("action") == "generate") {
-            await generate();
-            return new Response("generated");
-        }
-
-        const clientIp = req.headers.get("x-real-ip");
-
-        if (!clientIp) {
-            return new Response("missing x-real-ip header", { status: 400 });
-        }
-
-        const lastIp = lastIps[0][1];
-
-        if (lastIp !== clientIp) {
-            db.query("UPDATE allowlist SET client_ip = ? WHERE password = ?", [
-                clientIp,
-                pw,
-            ]);
-            const msg = `updated, last ip was: ${lastIp}, new is ${clientIp}`;
-            console.log(
-                (new Date()).toISOString(),
-                `client: ${pw.substr(0, 3)}...${
-                    pw.substr(-3)
-                }       ${msg} ... generating IP allowlist`,
+            const lastIps = db.query<[string, string]>(
+                "SELECT password, client_ip FROM allowlist WHERE password = ?",
+                [pw],
             );
 
-            await generate();
+            if (lastIps.length === 0) {
+                // cool, cool, cool, seems someone mistyped the password, or wants to HACKFUCK our little CYBERHEART to KILLDEATH, how'bout no
+                return new Response(
+                    `you won't believe what just happened with your request after we run password validation`,
+                    { status: 403 },
+                );
+            }
 
-            return new Response(msg, { status: 201 });
-        } else {
-            return new Response(`no update needed, ip ${clientIp}`);
-        }
-    });
+            if (b.get("action") == "generate") {
+                await generate();
+                return new Response("generated");
+            }
+
+            const clientIp = req.headers.get("x-real-ip");
+
+            if (!clientIp) {
+                return new Response("missing x-real-ip header", {
+                    status: 400,
+                });
+            }
+
+            const lastIp = lastIps[0][1];
+
+            if (lastIp !== clientIp) {
+                db.query(
+                    "UPDATE allowlist SET client_ip = ? WHERE password = ?",
+                    [
+                        clientIp,
+                        pw,
+                    ],
+                );
+                const msg =
+                    `updated, last ip was: ${lastIp}, new is ${clientIp}`;
+                console.log(
+                    (new Date()).toISOString(),
+                    `client: ${pw.substr(0, 3)}...${
+                        pw.substr(-3)
+                    }       ${msg} ... generating IP allowlist`,
+                );
+
+                await generate();
+
+                return new Response(msg, { status: 201 });
+            } else {
+                return new Response(`no update needed, ip ${clientIp}`);
+            }
+        },
+    );
 };
-
 
 enum Features {
     ListClients,
@@ -108,8 +118,7 @@ const print_help = () => {
 
 if (Deno.args.length > 0) {
     if (Deno.args[0] == "--server") {
-        await server()
-
+        await server();
     } else if (Deno.args[0] == "--list-clients") {
         console.log("clients in the DB currently");
 
@@ -118,6 +127,7 @@ if (Deno.args.length > 0) {
         );
 
         console.log(rows.length);
+        console.log(rows);
     } else if (Deno.args[0] == "--add-client") {
         console.log(
             "trying to add new client, CLI help:  ./server.ts --add-client abcxyzPassword",
@@ -160,8 +170,8 @@ const generate = async () => {
     await Deno.writeTextFile("ip-allowlist.txt", ips.join("\n"));
 
     const yaml = csParserYamlTemplate;
-    const list = yaml.whitelist as Record<string, unknown>
-    list.ip = ips.filter(x => typeof x === 'string' && x.length > 1)
+    const list = yaml.whitelist as Record<string, unknown>;
+    list.ip = ips.filter((x) => typeof x === "string" && x.length > 1);
 
     await Deno.writeTextFile("allowed-ip-list.yaml", stringify(yaml));
 
