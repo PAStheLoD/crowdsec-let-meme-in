@@ -25,14 +25,14 @@ const update = async () => {
         body,
     });
 
-    // console.log(response);
+    console.log(response);
     nextUpdateDate.setHours(nextUpdateDate.getHours() + 1);
 
 };
 
 await update();
 
-// console.log("first succeeded, starting update loop");
+console.log("first succeeded, starting update loop");
 
 const Item1 = {
     title: "Update now",
