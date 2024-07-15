@@ -161,7 +161,7 @@ const generate = async () => {
 
     const yaml = csParserYamlTemplate;
     const list = yaml.whitelist as Record<string, unknown>
-    list.ip = ips
+    list.ip = ips.filter(x => typeof x === 'string' && x.length > 1)
 
     await Deno.writeTextFile("allowed-ip-list.yaml", stringify(yaml));
 
