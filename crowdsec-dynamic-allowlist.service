@@ -3,7 +3,7 @@ Description=A small Deno based HTTP server, like a dynamic DNS updater but for C
 After=crowdsec.service
 
 [Service]
-ExecStart=/usr/bin/env deno run --allow-net --allow-write --allow-read server.ts
+ExecStart=/usr/bin/env deno run --allow-net --allow-write --allow-read server.ts --server
 Restart=always
 RestartSec=10
 WorkingDirectory=/opt/crowdsec-let-meme-in
