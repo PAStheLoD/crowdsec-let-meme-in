@@ -3,7 +3,7 @@
 ///# https://github.com/dyedgreen/deno-sqlite/issues/255
 
 import { DB } from "https://deno.land/x/sqlite@v3.8/mod.ts";
-import { stringify } from "https://deno.land/std@0.207.0/yaml/mod.ts";
+import { stringify } from "@std/yaml";
 import { enumToCli } from "./cli.ts";
 
 const port = 7891;
