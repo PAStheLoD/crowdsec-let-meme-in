@@ -26,86 +26,22 @@ const csParserYamlTemplate = {
     },
 };
 
-enum Features {
-    ListClients,
-    AddClient,
-    Server,
-}
 
-const print_help = () => {
-    const menu = enumToCli(Features);
 
-    console.log(menu.map((x) => `--${x.regularizedName}`).join("\n"));
-};
-
-if (Deno.args.length > 0) {
-    if (Deno.args[0] == "--list-clients") {
-        console.log("clients in the DB currently");
-
-        const rows = db.query<[string, string]>(
-            "SELECT DISTINCT * FROM allowlist",
-        );
-
-        console.log(rows.length);
-    } else if (Deno.args[0] == "--add-client") {
-        console.log(
-            "trying to add new client, CLI help:  ./server.ts --add-client abcxyzPassword",
-        );
-
-        if (!Deno.args[1]) {
-            console.log("missing password");
-            Deno.exit(1);
-        }
-
-        const pw = Deno.args[1];
-
-        const lastIp = db.query<[string, string]>(
-            "SELECT password, client_ip FROM allowlist WHERE password = ?",
-            [pw],
-        );
-
-        if (lastIp.length > 0) {
-            console.log("already added, but thanks.");
-            Deno.exit(0);
-        }
-
-        db.query("INSERT INTO allowlist (password) VALUES (?)", [pw]);
-
-        console.log(`added client with pw: ${pw}`);
-    } else {
-        print_help();
-    }
-} else {
-    print_help();
-}
-
-const generate = async () => {
-    const ips = [
-        ...new Set(
-            db.query<[string]>("SELECT client_ip FROM allowlist").flat(),
-        ),
-    ];
-
-    await Deno.writeTextFile("ip-allowlist.txt", ips.join("\n"));
-
-    const yaml = csParserYamlTemplate;
-    yaml.whitelist.ip = ips;
-
-    await Deno.writeTextFile("allowed-ip-list.yaml", stringify(yaml));
-
-    console.log(`done, list has ${ips.length} addresses`);
-};
-
-const server = async () => {
+const server = () => {
     console.log(`HTTP server running. Access it at: http://localhost:${port}/`);
 
-    Deno.serve({ port }, async (req: Request, info: ServeHandlerInfo) => {
+    Deno.serve({ port }, async (req: Request, _info: unknown /* ServeHandlerInfo */) => {
         if (!req.body) return new Response("missing body", { status: 400 });
 
         const b = await req.formData();
         // console.log(b, b.get('password'), info, info.remoteAddr, req.headers.get('x-real-ip'))
 
-        const pw = b.get("password");
+        const pw = b.get("password") as string;
+
+        if (typeof pw !== 'string') {
+            throw new Error(`runtime error: got something non-string in form data - ${typeof pw} //// ${JSON.stringify(pw)}`)
+        }
 
         if (!pw) return new Response("missing pw", { status: 400 });
 
@@ -155,4 +91,79 @@ const server = async () => {
             return new Response(`no update needed, ip ${clientIp}`);
         }
     });
+};
+
+
+enum Features {
+    ListClients,
+    AddClient,
+    Server,
+}
+
+const print_help = () => {
+    const menu = enumToCli(Features);
+
+    console.log(menu.map((x) => `--${x.regularizedName}`).join("\n"));
+};
+
+if (Deno.args.length > 0) {
+    if (Deno.args[0] == "--server") {
+        await server()
+
+    } else if (Deno.args[0] == "--list-clients") {
+        console.log("clients in the DB currently");
+
+        const rows = db.query<[string, string]>(
+            "SELECT DISTINCT * FROM allowlist",
+        );
+
+        console.log(rows.length);
+    } else if (Deno.args[0] == "--add-client") {
+        console.log(
+            "trying to add new client, CLI help:  ./server.ts --add-client abcxyzPassword",
+        );
+
+        if (!Deno.args[1]) {
+            console.log("missing password");
+            Deno.exit(1);
+        }
+
+        const pw = Deno.args[1];
+
+        const lastIp = db.query<[string, string]>(
+            "SELECT password, client_ip FROM allowlist WHERE password = ?",
+            [pw],
+        );
+
+        if (lastIp.length > 0) {
+            console.log("already added, but thanks.");
+            Deno.exit(0);
+        }
+
+        db.query("INSERT INTO allowlist (password) VALUES (?)", [pw]);
+
+        console.log(`added client with pw: ${pw}`);
+    } else {
+        print_help();
+    }
+} else {
+    print_help();
+}
+
+const generate = async () => {
+    const ips = [
+        ...new Set(
+            db.query<[string]>("SELECT client_ip FROM allowlist").flat(),
+        ),
+    ];
+
+    await Deno.writeTextFile("ip-allowlist.txt", ips.join("\n"));
+
+    const yaml = csParserYamlTemplate;
+    const list = yaml.whitelist as Record<string, unknown>
+    list.ip = ips
+
+    await Deno.writeTextFile("allowed-ip-list.yaml", stringify(yaml));
+
+    console.log(`done, list has ${ips.length} addresses`);
 };
