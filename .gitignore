@@ -2,3 +2,5 @@ allowlist.db
 ip-allowlist.txt
 
 allowed-ip-list.yaml
+
+.env

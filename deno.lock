@@ -1,5 +1,15 @@
 {
   "version": "3",
+  "packages": {
+    "specifiers": {
+      "jsr:@std/dotenv@^0.224.2": "jsr:@std/dotenv@0.224.2"
+    },
+    "jsr": {
+      "@std/dotenv@0.224.2": {
+        "integrity": "29081695357e4534696c9e986b2560be29c141ccf52daa32b6c20ff5b5c64ab9"
+      }
+    }
+  },
   "remote": {
     "https://deno.land/std@0.207.0/yaml/_dumper/dumper.ts": "717403d0e700de783f2ef5c906b3d7245383e1509fc050e7ff5d4a53a03dbf40",
     "https://deno.land/std@0.207.0/yaml/_dumper/dumper_state.ts": "f0d0673ceea288334061ca34b63954c2bb5feb5bf6de5e4cfe9a942cdf6e5efe",
@@ -46,5 +56,10 @@
     "https://deno.land/x/sqlite@v3.8/src/function.ts": "e4c83b8ec64bf88bafad2407376b0c6a3b54e777593c70336fb40d43a79865f2",
     "https://deno.land/x/sqlite@v3.8/src/query.ts": "d58abda928f6582d77bad685ecf551b1be8a15e8e38403e293ec38522e030cad",
     "https://deno.land/x/sqlite@v3.8/src/wasm.ts": "e79d0baa6e42423257fb3c7cc98091c54399254867e0f34a09b5bdef37bd9487"
+  },
+  "workspace": {
+    "dependencies": [
+      "jsr:@std/dotenv@^0.224.2"
+    ]
   }
 }
